@@ -14,8 +14,7 @@ export interface ServerConfig {
 
 export interface AuthConfig {
   enabled: boolean;
-  header: string;
-  keysEnv: string;
+  tokenEnv: string;
   protectMetrics: boolean;
   protectHealth: boolean;
 }

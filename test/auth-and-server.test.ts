@@ -7,11 +7,11 @@ import { createFakeAdapter } from "./helpers/fakeAdapter.js";
 
 describe("buildServer", () => {
   afterEach(() => {
-    delete process.env.MCP_API_KEYS_JSON;
+    delete process.env.MCP_BEARER_TOKEN;
   });
 
-  it("protects mcp routes with API keys", async () => {
-    process.env.MCP_API_KEYS_JSON = '["secret-key"]';
+  it("protects mcp routes with bearer tokens", async () => {
+    process.env.MCP_BEARER_TOKEN = "secret-token";
     const config = makeConfig();
     const app = await buildServer({
       config,
@@ -36,7 +36,7 @@ describe("buildServer", () => {
   });
 
   it("serves metrics and health with adapter status", async () => {
-    process.env.MCP_API_KEYS_JSON = '["secret-key"]';
+    process.env.MCP_BEARER_TOKEN = "secret-token";
     const config = makeConfig();
     const metrics = createMetricsRegistry();
     const app = await buildServer({
@@ -65,7 +65,7 @@ describe("buildServer", () => {
     const metricsAuthorized = await app.inject({
       method: "GET",
       url: "/metrics",
-      headers: { "x-api-key": "secret-key" },
+      headers: { authorization: "Bearer secret-token" },
     });
     expect(metricsAuthorized.statusCode).toBe(200);
     expect(metricsAuthorized.body).toContain("mcp_gateway_http_requests_total");
@@ -74,7 +74,7 @@ describe("buildServer", () => {
   });
 
   it("returns degraded health and can disable metrics", async () => {
-    process.env.MCP_API_KEYS_JSON = '["secret-key"]';
+    process.env.MCP_BEARER_TOKEN = "secret-token";
     const config = makeConfig();
     config.observability.metricsEnabled = false;
     const app = await buildServer({
@@ -98,7 +98,7 @@ describe("buildServer", () => {
     const metrics = await app.inject({
       method: "GET",
       url: "/metrics",
-      headers: { "x-api-key": "secret-key" },
+      headers: { authorization: "Bearer secret-token" },
     });
     expect(metrics.statusCode).toBe(404);
 
@@ -106,7 +106,7 @@ describe("buildServer", () => {
   });
 
   it("can protect health endpoint and rejects invalid body limit config", async () => {
-    process.env.MCP_API_KEYS_JSON = '["secret-key"]';
+    process.env.MCP_BEARER_TOKEN = "secret-token";
     const protectedConfig = makeConfig();
     protectedConfig.auth.protectHealth = true;
 
@@ -135,7 +135,7 @@ describe("buildServer", () => {
   });
 
   it("closes adapters on shutdown", async () => {
-    process.env.MCP_API_KEYS_JSON = '["secret-key"]';
+    process.env.MCP_BEARER_TOKEN = "secret-token";
     const onClose = vi.fn();
     const app = await buildServer({
       config: makeConfig(),

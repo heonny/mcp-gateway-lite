@@ -6,7 +6,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
 
 import { createApiKeyAuthenticator } from "../auth/apiKey.js";
-import { loadApiKeys } from "../config/loadConfig.js";
+import { loadBearerToken } from "../config/loadConfig.js";
 import { writeQueryAudit } from "../logging/queryAudit.js";
 import type { MetricsRegistry } from "../metrics/registry.js";
 import type { AdapterInstance, AdapterHealthStatus, AppConfig, RequestAudit, ToolExecutionContext } from "../types.js";
@@ -92,10 +92,9 @@ export async function buildServer({ config, adapters, metrics }: BuildServerOpti
 
   const authenticator = createApiKeyAuthenticator({
     enabled: config.auth.enabled,
-    header: config.auth.header,
     protectMetrics: config.auth.protectMetrics,
     protectHealth: config.auth.protectHealth,
-    keys: loadApiKeys(config),
+    token: loadBearerToken(config),
   });
 
   app.addHook("onRequest", async (request, reply) => {

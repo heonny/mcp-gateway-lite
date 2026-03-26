@@ -11,8 +11,7 @@ export function makeConfig(): AppConfig {
     },
     auth: {
       enabled: true,
-      header: "X-API-Key",
-      keysEnv: "MCP_API_KEYS_JSON",
+      tokenEnv: "MCP_BEARER_TOKEN",
       protectMetrics: true,
       protectHealth: false,
     },

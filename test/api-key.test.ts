@@ -6,10 +6,9 @@ describe("createApiKeyAuthenticator", () => {
   it("allows requests when auth is disabled", async () => {
     const auth = createApiKeyAuthenticator({
       enabled: false,
-      header: "X-API-Key",
       protectMetrics: true,
       protectHealth: false,
-      keys: new Set(["secret"]),
+      token: "secret",
     });
 
     await expect(
@@ -17,17 +16,16 @@ describe("createApiKeyAuthenticator", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("accepts bearer tokens and rejects invalid keys", async () => {
+  it("accepts bearer tokens and rejects invalid tokens", async () => {
     const reply = {
       code: vi.fn().mockReturnThis(),
       send: vi.fn(),
     };
     const auth = createApiKeyAuthenticator({
       enabled: true,
-      header: "X-API-Key",
       protectMetrics: true,
       protectHealth: false,
-      keys: new Set(["secret"]),
+      token: "secret",
     });
 
     await auth.authenticate({ headers: { authorization: "Bearer secret" } } as never, reply as never);

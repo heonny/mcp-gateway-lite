@@ -10,6 +10,9 @@ const envVarSchema = z
   .min(1)
   .regex(/^[A-Z][A-Z0-9_]*$/u, "must look like an environment variable name");
 
+const integerFromConfigSchema = z.coerce.number().int().positive();
+const nonNegativeIntegerFromConfigSchema = z.coerce.number().int().min(0);
+
 const baseAdapterSchema = z.object({
   enabled: z.boolean().default(true),
   path: routeSegmentSchema,
@@ -18,7 +21,7 @@ const baseAdapterSchema = z.object({
 const postgresAdapterSchema = baseAdapterSchema.extend({
   type: z.literal("postgres"),
   host: z.string().min(1),
-  port: z.number().int().positive(),
+  port: integerFromConfigSchema,
   database: z.string().min(1),
   userEnv: envVarSchema,
   passwordEnv: envVarSchema,
@@ -28,15 +31,15 @@ const postgresAdapterSchema = baseAdapterSchema.extend({
 const redisAdapterSchema = baseAdapterSchema.extend({
   type: z.literal("redis"),
   host: z.string().min(1),
-  port: z.number().int().positive(),
+  port: integerFromConfigSchema,
   passwordEnv: envVarSchema.optional(),
-  db: z.number().int().min(0),
+  db: nonNegativeIntegerFromConfigSchema,
 });
 
 const clickHouseAdapterSchema = baseAdapterSchema.extend({
   type: z.literal("clickhouse"),
   host: z.string().min(1),
-  port: z.number().int().positive(),
+  port: integerFromConfigSchema,
   database: z.string().min(1),
   userEnv: envVarSchema,
   passwordEnv: envVarSchema,
@@ -47,15 +50,14 @@ export const appConfigSchema = z
   .object({
     server: z.object({
       host: z.string().min(1).default("0.0.0.0"),
-      port: z.number().int().positive().default(8610),
+      port: integerFromConfigSchema.default(8610),
       endpoint: routeSegmentSchema.default("mcp"),
       requestBodyLimit: z.string().default("1mb"),
-      requestTimeoutMs: z.number().int().positive().default(10000),
+      requestTimeoutMs: integerFromConfigSchema.default(10000),
     }),
     auth: z.object({
       enabled: z.boolean().default(true),
-      header: z.string().min(1).default("X-API-Key"),
-      keysEnv: envVarSchema.default("MCP_API_KEYS_JSON"),
+      tokenEnv: envVarSchema.default("MCP_BEARER_TOKEN"),
       protectMetrics: z.boolean().default(true),
       protectHealth: z.boolean().default(false),
     }),
@@ -63,8 +65,8 @@ export const appConfigSchema = z
       queryLogLevel: z.enum(["redacted", "minimal", "full", "disable"]).default("redacted"),
       rateLimit: z.object({
         enabled: z.boolean().default(true),
-        windowMs: z.number().int().positive().default(60000),
-        maxRequests: z.number().int().positive().default(120),
+        windowMs: integerFromConfigSchema.default(60000),
+        maxRequests: integerFromConfigSchema.default(120),
       }),
     }),
     observability: z.object({

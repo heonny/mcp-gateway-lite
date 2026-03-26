@@ -21,8 +21,7 @@ describe("createAdapters", () => {
       },
       auth: {
         enabled: false,
-        header: "X-API-Key",
-        keysEnv: "MCP_API_KEYS_JSON",
+        tokenEnv: "MCP_BEARER_TOKEN",
         protectMetrics: false,
         protectHealth: false,
       },

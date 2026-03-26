@@ -7,8 +7,7 @@ server:
 
 auth:
   enabled: true
-  header: X-API-Key
-  keysEnv: MCP_API_KEYS_JSON
+  tokenEnv: ${MCP_BEARER_TOKEN_ENV:-MCP_BEARER_TOKEN}
   protectMetrics: true
   protectHealth: false
 
@@ -29,28 +28,28 @@ adapters:
     type: postgres
     enabled: true
     path: postgres
-    host: postgres
-    port: 5432
-    database: app
-    userEnv: POSTGRES_USER
-    passwordEnv: POSTGRES_PASSWORD
+    host: ${POSTGRES_HOST:-postgres}
+    port: ${POSTGRES_PORT:-5432}
+    database: ${POSTGRES_DATABASE:-app}
+    userEnv: ${POSTGRES_USER_ENV:-POSTGRES_USER}
+    passwordEnv: ${POSTGRES_PASSWORD_ENV:-POSTGRES_PASSWORD}
 
   redis:
     type: redis
     enabled: true
     path: redis
-    host: redis
-    port: 6379
-    passwordEnv: REDIS_PASSWORD
-    db: 0
+    host: ${REDIS_HOST:-redis}
+    port: ${REDIS_PORT:-6379}
+    passwordEnv: ${REDIS_PASSWORD_ENV:-REDIS_PASSWORD}
+    db: ${REDIS_DB:-0}
 
   clickhouse:
     type: clickhouse
     enabled: true
     path: clickhouse
-    host: clickhouse
-    port: 8123
-    database: default
-    userEnv: CLICKHOUSE_USER
-    passwordEnv: CLICKHOUSE_PASSWORD
-    protocol: http
+    host: ${CLICKHOUSE_HOST:-clickhouse}
+    port: ${CLICKHOUSE_PORT:-8123}
+    database: ${CLICKHOUSE_DATABASE:-default}
+    userEnv: ${CLICKHOUSE_USER_ENV:-CLICKHOUSE_USER}
+    passwordEnv: ${CLICKHOUSE_PASSWORD_ENV:-CLICKHOUSE_PASSWORD}
+    protocol: ${CLICKHOUSE_PROTOCOL:-http}

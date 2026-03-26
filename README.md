@@ -88,14 +88,14 @@
 
 - 포트 하나만 열고 여러 MCP backend를 운영할 수 있습니다.
 - adapter별 read-only 정책을 강제할 수 있습니다.
-- API key 인증, 구조화 로그, health, metrics를 기본 제공해 운영성이 좋습니다.
+- bearer token 인증, 구조화 로그, health, metrics를 기본 제공해 운영성이 좋습니다.
 - `config.yml` 1벌로 endpoint, 보안, 관측, backend 연결 구성을 관리할 수 있습니다.
 
 ## 주요 기능
 
 - Fastify 기반 단일 gateway
 - Streamable HTTP MCP routing
-- Built-in API key 인증
+- Built-in bearer token 인증
 - `/health` JSON 상태 확인
 - `/metrics` Prometheus metrics
 - 쿼리/명령 감사 로그 레벨 제어
@@ -110,7 +110,7 @@
 요청 흐름은 아래와 같습니다.
 
 1. Fastify 서버가 공통 middleware를 적용합니다.
-2. API key 보호 대상 경로인지 확인합니다.
+2. bearer token 보호 대상 경로인지 확인합니다.
 3. `/${server.endpoint}/${adapter.path}` 규칙으로 adapter를 선택합니다.
 4. adapter가 MCP tool을 등록하고 backend에 연결합니다.
 5. 결과를 반환하면서 로그와 metrics를 기록합니다.
@@ -159,7 +159,7 @@ cp config.example.yml config.yml
 ### 4. 시크릿 환경변수 설정
 
 ```bash
-export MCP_API_KEYS_JSON='["change-this-api-key"]'
+export MCP_BEARER_TOKEN='change-this-bearer-token'
 export POSTGRES_USER='your-postgres-user'
 export POSTGRES_PASSWORD='change-this-postgres-password'
 export REDIS_PASSWORD='change-this-redis-password'
@@ -167,13 +167,7 @@ export CLICKHOUSE_USER='your-clickhouse-user'
 export CLICKHOUSE_PASSWORD='change-this-clickhouse-password'
 ```
 
-`MCP_API_KEYS_JSON` 은 문자열 배열 JSON 이어야 합니다.
-
-예:
-
-```bash
-export MCP_API_KEYS_JSON='["team-key-a","team-key-b"]'
-```
+`MCP_BEARER_TOKEN` 은 비어 있지 않은 단일 bearer token 문자열이어야 합니다.
 
 ### 5. 개발 서버 실행
 
@@ -209,8 +203,7 @@ server:
 
 auth:
   enabled: true
-  header: X-API-Key
-  keysEnv: MCP_API_KEYS_JSON
+  tokenEnv: MCP_BEARER_TOKEN
   protectMetrics: true
   protectHealth: false
 
@@ -263,23 +256,21 @@ adapters:
 - 최상위 endpoint는 `server.endpoint` 로 지정합니다.
 - 각 adapter는 절대 경로가 아니라 상대 `path` 만 가집니다.
 - 실제 endpoint는 `/${server.endpoint}/${adapter.path}` 형태로 조합됩니다.
-- 비밀번호나 API key는 YAML에 직접 넣지 않고 `*Env` 로 참조합니다.
+- 비밀번호나 bearer token은 YAML에 직접 넣지 않고 `*Env` 로 참조합니다.
 - enabled adapter 간 `path` 중복은 허용되지 않습니다.
 
 ## 인증
 
-기본 인증 방식은 API key 입니다.
+기본 인증 방식은 bearer token 입니다.
 
 지원 헤더:
 
-- `X-API-Key: <key>`
-- `Authorization: Bearer <key>`
+- `Authorization: Bearer <token>`
 
 관련 설정:
 
 - `auth.enabled`
-- `auth.header`
-- `auth.keysEnv`
+- `auth.tokenEnv`
 - `auth.protectMetrics`
 - `auth.protectHealth`
 
@@ -377,7 +368,7 @@ Prometheus text format metrics를 반환합니다.
 ## 보안 기본값
 
 - YAML에 시크릿 직접 저장 금지
-- API key 인증 기본 제공
+- bearer token 인증 기본 제공
 - read-only backend 접근만 허용
 - rate limit 지원
 - request body limit 설정 가능
@@ -401,7 +392,7 @@ docker build -t mcp-gateway-lite .
 ```bash
 docker run --rm \
   -p 8610:8610 \
-  -e MCP_API_KEYS_JSON='["change-this-api-key"]' \
+  -e MCP_BEARER_TOKEN='change-this-bearer-token' \
   -e POSTGRES_USER=your-postgres-user \
   -e POSTGRES_PASSWORD=change-this-postgres-password \
   -e REDIS_PASSWORD=change-this-redis-password \
@@ -451,7 +442,7 @@ pnpm format:write
 현재 프로젝트는 다음을 검증합니다.
 
 - 설정 파일 schema validation
-- API key 인증
+- bearer token 인증
 - health / metrics 동작
 - adapter routing
 - Postgres / ClickHouse read-only SQL 제한
