@@ -1,0 +1,56 @@
+server:
+  host: 0.0.0.0
+  port: 8610
+  endpoint: mcp
+  requestBodyLimit: 1mb
+  requestTimeoutMs: 10000
+
+auth:
+  enabled: true
+  header: X-API-Key
+  keysEnv: MCP_API_KEYS_JSON
+  protectMetrics: true
+  protectHealth: false
+
+security:
+  queryLogLevel: redacted
+  rateLimit:
+    enabled: true
+    windowMs: 60000
+    maxRequests: 120
+
+observability:
+  metricsEnabled: true
+  healthPath: /health
+  metricsPath: /metrics
+
+adapters:
+  postgres:
+    type: postgres
+    enabled: true
+    path: postgres
+    host: postgres.example.internal
+    port: 5432
+    database: app
+    userEnv: POSTGRES_USER
+    passwordEnv: POSTGRES_PASSWORD
+
+  redis:
+    type: redis
+    enabled: true
+    path: redis
+    host: redis.example.internal
+    port: 6379
+    passwordEnv: REDIS_PASSWORD
+    db: 0
+
+  clickhouse:
+    type: clickhouse
+    enabled: true
+    path: clickhouse
+    host: clickhouse.example.internal
+    port: 8123
+    database: default
+    userEnv: CLICKHOUSE_USER
+    passwordEnv: CLICKHOUSE_PASSWORD
+    protocol: http

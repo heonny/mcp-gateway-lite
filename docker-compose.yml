@@ -1,0 +1,18 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mcp-gateway-lite:local
+    ports:
+      - "8610:8610"
+    environment:
+      MCP_API_KEYS_JSON: '["change-this-api-key"]'
+      POSTGRES_USER: your-postgres-user
+      POSTGRES_PASSWORD: change-this-postgres-password
+      REDIS_PASSWORD: change-this-redis-password
+      CLICKHOUSE_USER: your-clickhouse-user
+      CLICKHOUSE_PASSWORD: change-this-clickhouse-password
+    volumes:
+      - ./config.yml:/app/config.yml:ro
+    command: ["dist/main.js", "--config", "/app/config.yml"]
