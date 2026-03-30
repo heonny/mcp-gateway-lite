@@ -150,7 +150,7 @@ pnpm install
 
 ### 3. 설정 파일 준비
 
-기본 설정 파일은 [config.example.yml](/Users/chang/Documents/workspace/mcp/mcp-gateway-lite/config.example.yml) 입니다.
+기본 설정 파일은 [config.example.yml](./config.example.yml) 입니다.
 
 ```bash
 cp config.example.yml config.yml
@@ -185,7 +185,7 @@ pnpm dev
 
 ## 설정
 
-기본적으로 [config.yml](/Users/chang/Documents/workspace/mcp/mcp-gateway-lite/config.yml) 을 읽고, 필요하면 `--config` 로 다른 경로를 지정할 수 있습니다.
+기본적으로 [config.yml](./config.yml) 을 읽고, 필요하면 `--config` 로 다른 경로를 지정할 수 있습니다.
 
 ```bash
 node dist/main.js --config /app/config.yml
@@ -404,7 +404,7 @@ docker run --rm \
 
 ### docker-compose
 
-[docker-compose.yml](/Users/chang/Documents/workspace/mcp/mcp-gateway-lite/docker-compose.yml) 예시를 사용할 수 있습니다.
+[docker-compose.yml](./docker-compose.yml) 예시를 사용할 수 있습니다.
 
 ```bash
 docker compose up --build
@@ -479,9 +479,9 @@ mcp-gateway-lite/
 
 새 backend를 추가하려면:
 
-1. [src/types.ts](/Users/chang/Documents/workspace/mcp/mcp-gateway-lite/src/types.ts) 의 `AdapterInstance` 계약을 따릅니다.
-2. [src/adapters](/Users/chang/Documents/workspace/mcp/mcp-gateway-lite/src/adapters) 아래에 새 adapter 구현을 추가합니다.
-3. [src/adapters/index.ts](/Users/chang/Documents/workspace/mcp/mcp-gateway-lite/src/adapters/index.ts) 에 등록합니다.
+1. [src/types.ts](./src/types.ts) 의 `AdapterInstance` 계약을 따릅니다.
+2. [src/adapters](./src/adapters) 아래에 새 adapter 구현을 추가합니다.
+3. [src/adapters/index.ts](./src/adapters/index.ts) 에 등록합니다.
 4. `config.yml` 의 `adapters:` 아래에 인스턴스 설정을 추가합니다.
 
 v1에서는 외부 플러그인 로딩이 아니라 in-repo adapter 추가 방식을 기준으로 합니다.
