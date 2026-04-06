@@ -12,6 +12,22 @@
   "bugs": {
     "url": "https://github.com/heonny/mcp-gateway-lite/issues"
   },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "gateway",
+    "postgres",
+    "redis",
+    "clickhouse",
+    "fastify"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "README.en.md",
+    "LICENSE",
+    "config.example.yml"
+  ],
   "type": "module",
   "engines": {
     "node": ">=22.0.0"

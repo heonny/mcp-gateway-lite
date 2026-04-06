@@ -5,11 +5,11 @@
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](https://github.com/heonny/mcp-gateway-lite/blob/main/LICENSE)
 
-Postgres, Redis, ClickHouse를 하나의 Streamable HTTP MCP 게이트웨이로 묶는 경량 서버.
+Lightweight multi-adapter Streamable HTTP MCP gateway for Postgres, Redis, and ClickHouse.
 
-한국어 문서입니다. English version: [README.en.md](./README.en.md)
+English documentation. 한국어 문서: [README.md](./README.md)
 
-`mcp-gateway-lite`는 여러 데이터 백엔드를 각각 별도 MCP 서버로 운영하지 않고, 하나의 HTTP 엔드포인트 체계 아래에서 공통 인증, rate limit, 감사 로그, health check, metrics를 일관되게 제공하도록 설계되었습니다.
+`mcp-gateway-lite` is designed for teams that want to expose multiple data backends through MCP without running a separate MCP server for each one. It provides a single HTTP surface with shared authentication, rate limiting, audit logging, health checks, and Prometheus metrics.
 
 ```text
 POST /mcp/postgres
@@ -19,26 +19,26 @@ POST /mcp/clickhouse
 
 ## Overview
 
-MCP를 실제 운영 환경에 붙이기 시작하면 백엔드 수만큼 포트, 인증, 로깅, 모니터링이 늘어납니다.
+Once MCP moves beyond a toy setup, operational overhead starts to multiply with every backend.
 
-`mcp-gateway-lite`는 그 복잡도를 단일 게이트웨이로 정리합니다.
+`mcp-gateway-lite` keeps that surface compact.
 
-- 하나의 base path 아래에서 여러 backend 노출
-- 공통 bearer token 인증
-- 공통 health check와 Prometheus metrics
-- backend별 read-only 가드
-- 설정 기반 라우팅과 운영 표면 단순화
+- one base path for multiple backends
+- shared bearer token authentication
+- shared health checks and Prometheus metrics
+- read-only guardrails per backend
+- config-driven routing with a small operational surface
 
 ## Highlights
 
-- Fastify 기반 단일 MCP gateway
+- Single Fastify-based MCP gateway
 - Streamable HTTP MCP routing
-- Postgres, Redis, ClickHouse 지원
-- Postgres, ClickHouse용 read-only SQL guard
-- Redis allowlist 기반 read-only command 제한
-- `redacted`, `minimal`, `full`, `disable` 감사 로그 레벨
-- TypeScript strict mode, Vitest, coverage
-- Dockerfile과 `docker-compose.yml` 예시 포함
+- Support for Postgres, Redis, and ClickHouse
+- Read-only SQL guards for Postgres and ClickHouse
+- Allowlist-based read-only Redis commands
+- Query audit logging with `redacted`, `minimal`, `full`, and `disable` modes
+- TypeScript strict mode, Vitest, and coverage
+- Dockerfile and `docker-compose.yml` examples
 
 ## Request Flow
 
@@ -73,7 +73,7 @@ adapter
 
 - Node.js `22+`
 - `pnpm`
-- 접근 가능한 Postgres, Redis, ClickHouse 인스턴스
+- reachable Postgres, Redis, and ClickHouse instances
 
 ### Install
 
@@ -82,7 +82,7 @@ pnpm install
 cp config.example.yml config.yml
 ```
 
-`config.yml`은 저장소에 포함하지 않습니다. 항상 [`config.example.yml`](./config.example.yml)을 복사해 로컬에서 생성하세요.
+`config.yml` is intentionally not committed. Create it locally from [`config.example.yml`](./config.example.yml).
 
 ### Set Secrets
 
@@ -101,7 +101,7 @@ export CLICKHOUSE_PASSWORD='change-this-clickhouse-password'
 pnpm dev
 ```
 
-기본 엔드포인트:
+Default endpoints:
 
 - `GET /health`
 - `GET /metrics`
@@ -111,13 +111,13 @@ pnpm dev
 
 ## Configuration
 
-기본적으로 앱은 `./config.yml`을 읽고, 필요하면 `--config`로 경로를 바꿀 수 있습니다.
+By default the app reads `./config.yml`. You can override it with `--config`.
 
 ```bash
 node dist/main.js --config /app/config.yml
 ```
 
-예시:
+Example:
 
 ```yaml
 server:
@@ -157,31 +157,31 @@ adapters:
     passwordEnv: POSTGRES_PASSWORD
 ```
 
-규칙:
+Rules:
 
-- `server.endpoint`가 공통 MCP base path를 결정합니다.
-- 각 adapter는 상대 `path`를 사용합니다.
-- 최종 라우트는 `/{server.endpoint}/{adapter.path}` 형태로 조합됩니다.
-- 시크릿은 YAML에 직접 쓰지 말고 `*Env`로 참조합니다.
-- 활성화된 adapter끼리는 같은 `path`를 사용할 수 없습니다.
+- `server.endpoint` defines the shared MCP base path.
+- Each adapter uses a relative `path`.
+- Final routes are assembled as `/{server.endpoint}/{adapter.path}`.
+- Secrets should be referenced with `*Env`, not committed to YAML.
+- Enabled adapters must not share the same `path`.
 
-전체 예시는 [`config.example.yml`](./config.example.yml)을 참고하세요.
+See [`config.example.yml`](./config.example.yml) for the full example.
 
 ## Authentication
 
-기본 인증 방식은 bearer token입니다.
+Bearer token auth is enabled by default.
 
 ```http
 Authorization: Bearer <token>
 ```
 
-기본 보호 정책:
+Default protection policy:
 
 - `/mcp/*`: protected
 - `/metrics`: protected
 - `/health`: public
 
-관련 설정:
+Relevant settings:
 
 - `auth.enabled`
 - `auth.tokenEnv`
@@ -192,9 +192,9 @@ Authorization: Bearer <token>
 
 ### `POST /{endpoint}/{adapter}`
 
-Streamable HTTP MCP endpoint입니다.
+Streamable HTTP MCP endpoint.
 
-예시:
+Examples:
 
 - `POST /mcp/postgres`
 - `POST /mcp/redis`
@@ -202,7 +202,7 @@ Streamable HTTP MCP endpoint입니다.
 
 ### `GET /health`
 
-서비스와 adapter 상태를 JSON으로 반환합니다.
+Returns service and adapter health as JSON.
 
 ```json
 {
@@ -225,9 +225,9 @@ Streamable HTTP MCP endpoint입니다.
 
 ### `GET /metrics`
 
-Prometheus text format metrics를 반환합니다.
+Returns Prometheus text-format metrics.
 
-대표 metric:
+Main metrics:
 
 - `mcp_gateway_http_requests_total`
 - `mcp_gateway_adapter_tool_calls_total`
@@ -236,30 +236,30 @@ Prometheus text format metrics를 반환합니다.
 
 ## Observability
 
-구조화 로그는 `pino`를 사용합니다.
+Structured logs use `pino`.
 
-`security.queryLogLevel`:
+`security.queryLogLevel` controls audit detail:
 
-- `redacted`: 기본값, 원문 대신 hash와 메타데이터 기록
-- `minimal`: 최소 메타데이터만 기록
-- `full`: 쿼리 또는 명령 원문 기록
-- `disable`: 감사 로그 비활성화
+- `redacted`: default, stores hashes and metadata without raw text
+- `minimal`: stores only minimal metadata
+- `full`: stores full query or command text
+- `disable`: disables audit logging
 
-권장값:
+Recommended defaults:
 
 - development: `redacted`
-- production: `redacted` 또는 `minimal`
+- production: `redacted` or `minimal`
 - restricted debugging only: `full`
 
 ## Security
 
-- bearer token이나 backend password를 커밋하지 마세요.
-- backend별 read-only 전용 계정을 사용하세요.
-- 운영에서는 `queryLogLevel`을 `redacted` 또는 `minimal`로 유지하세요.
-- reverse proxy 또는 신뢰된 네트워크 경계 뒤에 두세요.
-- Redis allowlist는 실제 워크로드에 맞게 검토하세요.
+- Do not commit bearer tokens or backend passwords.
+- Use dedicated read-only credentials per backend.
+- Keep `queryLogLevel` at `redacted` or `minimal` in production.
+- Put the gateway behind a reverse proxy or trusted network boundary.
+- Review the Redis allowlist for your workload before production use.
 
-자세한 내용은 [`SECURITY.md`](./SECURITY.md)를 참고하세요.
+More details are in [`SECURITY.md`](./SECURITY.md).
 
 ## Docker
 
@@ -286,7 +286,7 @@ docker run --rm \
 
 ### Docker Compose
 
-[`docker-compose.yml`](./docker-compose.yml)을 시작점으로 사용할 수 있습니다.
+[`docker-compose.yml`](./docker-compose.yml) is included as a starting point.
 
 ```bash
 docker compose up --build
@@ -319,7 +319,7 @@ pnpm format
 pnpm format:write
 ```
 
-현재 테스트는 아래를 검증합니다.
+Current tests cover:
 
 - config schema validation
 - bearer token authentication
@@ -351,23 +351,23 @@ mcp-gateway-lite/
 
 ## Extending
 
-새 backend를 추가하려면:
+To add another backend:
 
-1. [`AdapterInstance`](./src/types.ts) 계약을 구현합니다.
-2. [`src/adapters`](./src/adapters)에 adapter를 추가합니다.
-3. [`src/adapters/index.ts`](./src/adapters/index.ts)에 등록합니다.
-4. 로컬 `config.yml`의 `adapters:` 아래에 설정을 추가합니다.
+1. Implement the [`AdapterInstance`](./src/types.ts) contract.
+2. Add the adapter under [`src/adapters`](./src/adapters).
+3. Register it in [`src/adapters/index.ts`](./src/adapters/index.ts).
+4. Add configuration under `adapters:` in your local `config.yml`.
 
-현재는 외부 플러그인 로딩이 아니라 저장소 내부 adapter 추가 방식을 기준으로 합니다.
+The current extension model is in-repo adapters rather than external plugins.
 
 ## Contributing
 
-기여는 언제든 환영합니다.
+Contributions are welcome.
 
-- PR 전 [`CONTRIBUTING.md`](./CONTRIBUTING.md)를 읽어주세요.
-- 변경 범위는 작고 명확하게 유지해 주세요.
-- 동작이나 설정이 바뀌면 문서도 함께 갱신해 주세요.
+- Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) before opening a PR.
+- Keep changes scoped and well tested.
+- Update documentation when behavior or configuration changes.
 
 ## License
 
-MIT. 자세한 내용은 [`LICENSE`](./LICENSE)를 참고하세요.
+MIT. See [`LICENSE`](./LICENSE).
