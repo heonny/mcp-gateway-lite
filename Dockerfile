@@ -22,4 +22,4 @@ USER node
 
 EXPOSE 8610
 
-CMD ["dist/main.js", "--config", "/app/config.yml"]
+CMD ["node", "dist/main.js", "--config", "/app/config.yml"]

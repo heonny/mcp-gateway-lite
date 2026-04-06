@@ -1,9 +1,17 @@
 {
   "name": "mcp-gateway-lite",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "license": "MIT",
   "description": "A lightweight multi-adapter MCP streamable HTTP gateway for Postgres, Redis, and ClickHouse.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heonny/mcp-gateway-lite.git"
+  },
+  "homepage": "https://github.com/heonny/mcp-gateway-lite#readme",
+  "bugs": {
+    "url": "https://github.com/heonny/mcp-gateway-lite/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=22.0.0"
