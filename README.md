@@ -2,19 +2,24 @@
 
 [![CI](https://github.com/heonny/mcp-gateway-lite/actions/workflows/ci.yml/badge.svg)](https://github.com/heonny/mcp-gateway-lite/actions/workflows/ci.yml)
 [![Codecov](https://codecov.io/gh/heonny/mcp-gateway-lite/graph/badge.svg)](https://codecov.io/gh/heonny/mcp-gateway-lite)
+[![npm version](https://img.shields.io/npm/v/mcp-gateway-lite)](https://www.npmjs.com/package/mcp-gateway-lite)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](https://github.com/heonny/mcp-gateway-lite/blob/main/LICENSE)
 
-Postgres, Redis, ClickHouse를 하나의 Streamable HTTP MCP 게이트웨이로 묶는 경량 서버.
+Postgres, Redis, ClickHouse를 하나의 Streamable HTTP MCP 게이트웨이로 묶는 경량 오픈소스 서버.
 
-한국어 문서입니다. English version: [README.en.md](./README.en.md)
+[English README](./README.en.md)
 
-`mcp-gateway-lite`는 여러 데이터 백엔드를 각각 별도 MCP 서버로 운영하지 않고, 하나의 HTTP 엔드포인트 체계 아래에서 공통 인증, rate limit, 감사 로그, health check, metrics를 일관되게 제공하도록 설계되었습니다.
+`mcp-gateway-lite`는 여러 데이터 백엔드를 각각 별도 MCP 서버로 운영하지 않고, 하나의 HTTP 엔드포인트 체계 아래에서 공통 인증, rate limit, 감사 로그, health check, metrics를 일관되게 제공하도록 설계되었습니다. GitHub와 npm에서 바로 받아 쓸 수 있는 배포 가능한 MCP gateway를 목표로 합니다.
 
 ```text
 POST /mcp/postgres
 POST /mcp/redis
 POST /mcp/clickhouse
+```
+
+```bash
+npx mcp-gateway-lite --config ./config.yml
 ```
 
 ## Overview
@@ -78,11 +83,17 @@ adapter
 ### Install
 
 ```bash
-pnpm install
+npm install -g mcp-gateway-lite
 cp config.example.yml config.yml
 ```
 
 `config.yml`은 저장소에 포함하지 않습니다. 항상 [`config.example.yml`](./config.example.yml)을 복사해 로컬에서 생성하세요.
+
+또는 설치 없이 바로 실행:
+
+```bash
+npx mcp-gateway-lite --config ./config.yml
+```
 
 ### Set Secrets
 
@@ -98,7 +109,7 @@ export CLICKHOUSE_PASSWORD='change-this-clickhouse-password'
 ### Run
 
 ```bash
-pnpm dev
+mcp-gateway-lite --config ./config.yml
 ```
 
 기본 엔드포인트:
@@ -294,7 +305,7 @@ docker compose up --build
 
 ## npm Package
 
-npm으로도 배포할 수 있는 구조입니다. publish 후에는 아래처럼 실행할 수 있습니다.
+npm에 배포되어 있습니다. 현재 latest 버전은 `0.1.0`입니다.
 
 ```bash
 npx mcp-gateway-lite --config ./config.yml
@@ -306,6 +317,8 @@ npx mcp-gateway-lite --config ./config.yml
 npm install -g mcp-gateway-lite
 mcp-gateway-lite --config ./config.yml
 ```
+
+패키지 페이지: [npmjs.com/package/mcp-gateway-lite](https://www.npmjs.com/package/mcp-gateway-lite)
 
 ## Reverse Proxy
 

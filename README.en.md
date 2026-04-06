@@ -2,19 +2,24 @@
 
 [![CI](https://github.com/heonny/mcp-gateway-lite/actions/workflows/ci.yml/badge.svg)](https://github.com/heonny/mcp-gateway-lite/actions/workflows/ci.yml)
 [![Codecov](https://codecov.io/gh/heonny/mcp-gateway-lite/graph/badge.svg)](https://codecov.io/gh/heonny/mcp-gateway-lite)
+[![npm version](https://img.shields.io/npm/v/mcp-gateway-lite)](https://www.npmjs.com/package/mcp-gateway-lite)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](https://github.com/heonny/mcp-gateway-lite/blob/main/LICENSE)
 
-Lightweight multi-adapter Streamable HTTP MCP gateway for Postgres, Redis, and ClickHouse.
+Lightweight open-source Streamable HTTP MCP gateway for Postgres, Redis, and ClickHouse.
 
-English documentation. 한국어 문서: [README.md](./README.md)
+[한국어 README](./README.md)
 
-`mcp-gateway-lite` is designed for teams that want to expose multiple data backends through MCP without running a separate MCP server for each one. It provides a single HTTP surface with shared authentication, rate limiting, audit logging, health checks, and Prometheus metrics.
+`mcp-gateway-lite` is designed for teams that want to expose multiple data backends through MCP without running a separate MCP server for each one. It provides a single HTTP surface with shared authentication, rate limiting, audit logging, health checks, and Prometheus metrics, and it is now published on npm for direct installation and execution.
 
 ```text
 POST /mcp/postgres
 POST /mcp/redis
 POST /mcp/clickhouse
+```
+
+```bash
+npx mcp-gateway-lite --config ./config.yml
 ```
 
 ## Overview
@@ -78,11 +83,17 @@ adapter
 ### Install
 
 ```bash
-pnpm install
+npm install -g mcp-gateway-lite
 cp config.example.yml config.yml
 ```
 
 `config.yml` is intentionally not committed. Create it locally from [`config.example.yml`](./config.example.yml).
+
+Or run it directly without installing:
+
+```bash
+npx mcp-gateway-lite --config ./config.yml
+```
 
 ### Set Secrets
 
@@ -98,7 +109,7 @@ export CLICKHOUSE_PASSWORD='change-this-clickhouse-password'
 ### Run
 
 ```bash
-pnpm dev
+mcp-gateway-lite --config ./config.yml
 ```
 
 Default endpoints:
@@ -294,7 +305,7 @@ docker compose up --build
 
 ## npm Package
 
-The project can also be distributed through npm. After publishing, you can run it like this:
+The package is now published on npm. The current `latest` version is `0.1.0`.
 
 ```bash
 npx mcp-gateway-lite --config ./config.yml
@@ -306,6 +317,8 @@ Or install it globally:
 npm install -g mcp-gateway-lite
 mcp-gateway-lite --config ./config.yml
 ```
+
+Package page: [npmjs.com/package/mcp-gateway-lite](https://www.npmjs.com/package/mcp-gateway-lite)
 
 ## Reverse Proxy
 
