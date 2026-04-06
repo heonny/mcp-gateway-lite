@@ -292,6 +292,21 @@ docker run --rm \
 docker compose up --build
 ```
 
+## npm Package
+
+npm으로도 배포할 수 있는 구조입니다. publish 후에는 아래처럼 실행할 수 있습니다.
+
+```bash
+npx mcp-gateway-lite --config ./config.yml
+```
+
+또는 전역 설치 후:
+
+```bash
+npm install -g mcp-gateway-lite
+mcp-gateway-lite --config ./config.yml
+```
+
 ## Reverse Proxy
 
 ```nginx
@@ -315,6 +330,8 @@ pnpm dev
 pnpm build
 pnpm lint
 pnpm test
+pnpm pack:check
+pnpm publish:check
 pnpm format
 pnpm format:write
 ```

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -19,7 +20,7 @@ export function parseConfigPath(argv: string[]): string {
   return path.join(projectRoot, "config.yml");
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const configPath = parseConfigPath(process.argv.slice(2));
   if (!configPath) {
     throw new Error("Missing value for --config");
@@ -42,13 +43,19 @@ async function main(): Promise<void> {
       host: config.server.host,
       port: config.server.port,
       endpoint: `/${config.server.endpoint}`,
-      adapters: adapters.map((adapter) => ({ name: adapter.name, path: adapter.path, type: adapter.type })),
+      adapters: adapters.map((adapter) => ({
+        name: adapter.name,
+        path: adapter.path,
+        type: adapter.type,
+      })),
     },
     "mcp gateway started",
   );
 }
 
-const isEntrypoint = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const isEntrypoint =
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isEntrypoint) {
   await main();

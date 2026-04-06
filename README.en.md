@@ -292,6 +292,21 @@ docker run --rm \
 docker compose up --build
 ```
 
+## npm Package
+
+The project can also be distributed through npm. After publishing, you can run it like this:
+
+```bash
+npx mcp-gateway-lite --config ./config.yml
+```
+
+Or install it globally:
+
+```bash
+npm install -g mcp-gateway-lite
+mcp-gateway-lite --config ./config.yml
+```
+
 ## Reverse Proxy
 
 ```nginx
@@ -315,6 +330,8 @@ pnpm dev
 pnpm build
 pnpm lint
 pnpm test
+pnpm pack:check
+pnpm publish:check
 pnpm format
 pnpm format:write
 ```

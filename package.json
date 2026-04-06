@@ -28,6 +28,9 @@
     "LICENSE",
     "config.example.yml"
   ],
+  "bin": {
+    "mcp-gateway-lite": "dist/main.js"
+  },
   "type": "module",
   "engines": {
     "node": ">=22.0.0"
@@ -37,6 +40,9 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/main.ts --config ./config.yml",
     "start": "node dist/main.js --config ./config.yml",
+    "prepack": "pnpm build",
+    "pack:check": "npm pack --dry-run",
+    "publish:check": "pnpm lint && pnpm test && pnpm build && npm pack --dry-run",
     "lint": "eslint .",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
