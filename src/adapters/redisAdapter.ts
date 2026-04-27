@@ -35,11 +35,13 @@ export function createRedisAdapter(name: string, config: RedisAdapterConfig): Ad
     password?: string;
     socket: {
       connectTimeout: number;
+      reconnectStrategy: (retries: number) => number | false;
     };
   } = {
     url: `redis://${config.host}:${config.port}/${config.db}`,
     socket: {
       connectTimeout: 5000,
+      reconnectStrategy: (retries) => Math.min(retries * 200, 5000),
     },
   };
   if (config.passwordEnv) {
@@ -49,7 +51,14 @@ export function createRedisAdapter(name: string, config: RedisAdapterConfig): Ad
     }
   }
   const client = createClient(clientOptions);
-  const connectPromise = client.connect();
+  client.on("error", (err: Error) => {
+    process.stderr.write(`[redis:${name}] ${err.message}\n`);
+  });
+  const connectPromise = client.connect().catch((err: unknown) => {
+    const message = err instanceof Error ? err.message : String(err);
+    process.stderr.write(`[redis:${name}] initial connect failed: ${message}\n`);
+    return undefined;
+  });
 
   return {
     name,

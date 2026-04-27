@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const queryMock = vi.fn();
 const endMock = vi.fn();
+const onMock = vi.fn<(event: string, handler: (err: Error) => void) => void>();
 
 vi.mock("pg", () => ({
   Pool: class {
     query = queryMock;
     end = endMock;
+    on = onMock;
   },
 }));
 
@@ -45,6 +47,7 @@ describe("createPostgresAdapter", () => {
     process.env.POSTGRES_PASSWORD = "pass";
     queryMock.mockReset();
     endMock.mockReset();
+    onMock.mockReset();
   });
 
   it("blocks write queries", async () => {
@@ -102,5 +105,17 @@ describe("createPostgresAdapter", () => {
       passwordEnv: "POSTGRES_PASSWORD",
     });
     await expect(adapter.healthCheck()).resolves.toMatchObject({ ok: false });
+  });
+
+  it("registers a pool error listener that suppresses uncaught throws", () => {
+    captureTool();
+    expect(onMock).toHaveBeenCalledWith("error", expect.any(Function));
+    const errorCall = onMock.mock.calls.find((call) => call[0] === "error");
+    expect(errorCall).toBeDefined();
+    const handler = errorCall![1];
+    const writeSpy = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    expect(() => handler(new Error("idle drop"))).not.toThrow();
+    expect(writeSpy).toHaveBeenCalledWith(expect.stringContaining("[postgres:postgres] idle drop"));
+    writeSpy.mockRestore();
   });
 });

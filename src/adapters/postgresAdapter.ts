@@ -43,6 +43,9 @@ export function createPostgresAdapter(name: string, config: PostgresAdapterConfi
     idleTimeoutMillis: 10_000,
     connectionTimeoutMillis: 5_000,
   });
+  pool.on("error", (err: Error) => {
+    process.stderr.write(`[postgres:${name}] ${err.message}\n`);
+  });
 
   return {
     name,

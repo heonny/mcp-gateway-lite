@@ -5,6 +5,7 @@ const sendCommandMock = vi.fn();
 const pingMock = vi.fn();
 const dbSizeMock = vi.fn();
 const quitMock = vi.fn();
+const onMock = vi.fn<(event: string, handler: (err: Error) => void) => void>();
 
 vi.mock("redis", () => ({
   createClient: vi.fn(() => ({
@@ -13,6 +14,7 @@ vi.mock("redis", () => ({
     ping: pingMock,
     dbSize: dbSizeMock,
     quit: quitMock,
+    on: onMock,
     isOpen: true,
   })),
 }));
@@ -59,6 +61,7 @@ describe("createRedisAdapter", () => {
     pingMock.mockReset();
     dbSizeMock.mockReset();
     quitMock.mockReset();
+    onMock.mockReset();
     connectMock.mockResolvedValue(undefined);
   });
 
@@ -92,5 +95,32 @@ describe("createRedisAdapter", () => {
     const { adapter, handler } = captureTool();
     await expect(handler({ command: "GET mykey" })).resolves.toMatchObject({ isError: true });
     await expect(adapter.healthCheck()).resolves.toMatchObject({ ok: false });
+  });
+
+  it("registers an error listener and survives failed initial connect", async () => {
+    connectMock.mockRejectedValueOnce(new Error("EHOSTUNREACH"));
+    pingMock.mockRejectedValueOnce(new Error("EHOSTUNREACH"));
+    const writeSpy = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+
+    const { adapter } = captureTool();
+    expect(onMock).toHaveBeenCalledWith("error", expect.any(Function));
+
+    await expect(adapter.healthCheck()).resolves.toMatchObject({ ok: false });
+    expect(writeSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[redis:redis] initial connect failed"),
+    );
+
+    writeSpy.mockRestore();
+  });
+
+  it("emitted error events are captured without throwing", () => {
+    captureTool();
+    const errorCall = onMock.mock.calls.find((call) => call[0] === "error");
+    expect(errorCall).toBeDefined();
+    const handler = errorCall![1];
+    const writeSpy = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    expect(() => handler(new Error("boom"))).not.toThrow();
+    expect(writeSpy).toHaveBeenCalledWith(expect.stringContaining("[redis:redis] boom"));
+    writeSpy.mockRestore();
   });
 });
