@@ -11,7 +11,7 @@ services:
     container_name: mcp-gateway-lite
     restart: unless-stopped
     env_file:
-      - .env
+      - ${DC_ENV_FILE:-.env}
     ports:
       # Tailnet access goes through `tailscale serve` (../../tailscale-expose.sh).
       - "127.0.0.1:8610:8610"
