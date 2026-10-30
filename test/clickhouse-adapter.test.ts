@@ -4,8 +4,10 @@ const jsonMock = vi.fn();
 const queryMock = vi.fn();
 const closeMock = vi.fn();
 
+const createClientMock = vi.hoisted(() => vi.fn());
+
 vi.mock("@clickhouse/client", () => ({
-  createClient: vi.fn(() => ({
+  createClient: createClientMock.mockImplementation(() => ({
     query: queryMock,
     close: closeMock,
   })),
@@ -81,5 +83,44 @@ describe("createClickHouseAdapter", () => {
     const { adapter, handler } = captureTool();
     await expect(handler({ sql: "SELECT 1" })).resolves.toMatchObject({ isError: true });
     await expect(adapter.healthCheck()).resolves.toMatchObject({ ok: false });
+  });
+
+  it("stringifies non-Error rejections", async () => {
+    queryMock.mockRejectedValue("timeout");
+    const { adapter, handler } = captureTool();
+    await expect(handler({ sql: "SELECT 1" })).resolves.toMatchObject({
+      content: [{ type: "text", text: "Query failed: timeout" }],
+    });
+    await expect(adapter.healthCheck()).resolves.toMatchObject({ error: "timeout" });
+  });
+
+  it("falls back to the configured database when the health query returns no rows", async () => {
+    queryMock.mockResolvedValue({ json: jsonMock });
+    jsonMock.mockResolvedValue([]);
+    const { adapter } = captureTool();
+    await expect(adapter.healthCheck()).resolves.toMatchObject({
+      ok: true,
+      details: { database: "default" },
+    });
+  });
+
+  it("defaults to http and omits credentials whose env vars are unset", () => {
+    delete process.env.CLICKHOUSE_USER;
+    delete process.env.CLICKHOUSE_PASSWORD;
+    createClickHouseAdapter("clickhouse", {
+      type: "clickhouse",
+      enabled: true,
+      path: "clickhouse",
+      host: "localhost",
+      port: 8123,
+      database: "default",
+      userEnv: "CLICKHOUSE_USER",
+      passwordEnv: "CLICKHOUSE_PASSWORD",
+    });
+    expect(createClientMock.mock.lastCall?.[0]).toEqual({
+      url: "http://localhost:8123",
+      database: "default",
+      request_timeout: 5000,
+    });
   });
 });

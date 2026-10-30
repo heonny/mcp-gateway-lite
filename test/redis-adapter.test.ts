@@ -7,8 +7,10 @@ const dbSizeMock = vi.fn();
 const quitMock = vi.fn();
 const onMock = vi.fn<(event: string, handler: (err: Error) => void) => void>();
 
+const createClientMock = vi.hoisted(() => vi.fn());
+
 vi.mock("redis", () => ({
-  createClient: vi.fn(() => ({
+  createClient: createClientMock.mockImplementation(() => ({
     connect: connectMock,
     sendCommand: sendCommandMock,
     ping: pingMock,
@@ -21,7 +23,7 @@ vi.mock("redis", () => ({
 
 import { createRedisAdapter } from "../src/adapters/redisAdapter.js";
 
-function captureTool() {
+function captureTool(passwordEnv: string | null = "REDIS_PASSWORD") {
   const adapter = createRedisAdapter("redis", {
     type: "redis",
     enabled: true,
@@ -29,8 +31,9 @@ function captureTool() {
     host: "localhost",
     port: 6379,
     db: 0,
-    passwordEnv: "REDIS_PASSWORD",
+    ...(passwordEnv ? { passwordEnv } : {}),
   });
+  const recordToolCall = vi.fn();
   const handlers = new Map<string, (args: { command: string }) => Promise<unknown>>();
   adapter.registerTools(
     {
@@ -47,10 +50,10 @@ function captureTool() {
       adapterName: "redis",
       logger: { info: vi.fn(), error: vi.fn() } as never,
       queryLogLevel: "redacted",
-      recordToolCall: vi.fn(),
+      recordToolCall,
     },
   );
-  return { adapter, handler: handlers.get("command")! };
+  return { adapter, handler: handlers.get("command")!, recordToolCall };
 }
 
 describe("createRedisAdapter", () => {
@@ -63,6 +66,11 @@ describe("createRedisAdapter", () => {
     quitMock.mockReset();
     onMock.mockReset();
     connectMock.mockResolvedValue(undefined);
+  });
+
+  it("pins RESP2 so raw replies keep their flat-array shape", () => {
+    captureTool();
+    expect(createClientMock).toHaveBeenLastCalledWith(expect.objectContaining({ RESP: 2 }));
   });
 
   it("blocks write commands", async () => {
@@ -122,5 +130,32 @@ describe("createRedisAdapter", () => {
     expect(() => handler(new Error("boom"))).not.toThrow();
     expect(writeSpy).toHaveBeenCalledWith(expect.stringContaining("[redis:redis] boom"));
     writeSpy.mockRestore();
+  });
+
+  it("stringifies non-Error rejections", async () => {
+    sendCommandMock.mockRejectedValueOnce("socket closed");
+    pingMock.mockRejectedValueOnce("socket closed");
+    const { adapter, handler } = captureTool();
+    await expect(handler({ command: "GET mykey" })).resolves.toMatchObject({
+      content: [{ type: "text", text: "Command failed: socket closed" }],
+    });
+    await expect(adapter.healthCheck()).resolves.toMatchObject({ error: "socket closed" });
+  });
+
+  it("counts array replies by length and nil replies as zero", async () => {
+    sendCommandMock.mockResolvedValueOnce(["f1", "a", "f2", "b"]).mockResolvedValueOnce(null);
+    const { handler, recordToolCall } = captureTool();
+    await handler({ command: "HGETALL h" });
+    await handler({ command: "GET missing" });
+    expect(recordToolCall).toHaveBeenNthCalledWith(1, expect.objectContaining({ resultCount: 4 }));
+    expect(recordToolCall).toHaveBeenNthCalledWith(2, expect.objectContaining({ resultCount: 0 }));
+  });
+
+  it("omits the password when no env var is configured or it is unset", () => {
+    captureTool(null);
+    expect(createClientMock.mock.lastCall?.[0]).not.toHaveProperty("password");
+    delete process.env.REDIS_PASSWORD;
+    captureTool();
+    expect(createClientMock.mock.lastCall?.[0]).not.toHaveProperty("password");
   });
 });

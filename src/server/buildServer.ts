@@ -99,7 +99,7 @@ export async function buildServer({ config, adapters, metrics }: BuildServerOpti
 
   app.addHook("onRequest", async (request, reply) => {
     if (shouldAuthenticate(request.url, config)) {
-      await authenticator.authenticate(request as never, reply as never);
+      await authenticator.authenticate(request, reply);
     }
   });
 
@@ -169,8 +169,8 @@ export async function buildServer({ config, adapters, metrics }: BuildServerOpti
       const transport = new StreamableHTTPServerTransport({
       });
 
-      await server.connect(transport as never);
-      await transport.handleRequest(request.raw as never, reply.raw as never, request.body);
+      await server.connect(transport);
+      await transport.handleRequest(request.raw, reply.raw, request.body);
       return reply;
     });
   }

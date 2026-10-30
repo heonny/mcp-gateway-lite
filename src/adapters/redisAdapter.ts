@@ -33,12 +33,17 @@ export function createRedisAdapter(name: string, config: RedisAdapterConfig): Ad
   const clientOptions: {
     url: string;
     password?: string;
+    RESP: 2;
     socket: {
       connectTimeout: number;
       reconnectStrategy: (retries: number) => number | false;
     };
   } = {
     url: `redis://${config.host}:${config.port}/${config.db}`,
+    // The command tool returns raw sendCommand replies as JSON. redis v6 defaults to RESP3,
+    // which turns HGETALL into an object and ZRANGE WITHSCORES into pairs, changing both the
+    // output and resultCount; RESP2 keeps the flat-array shapes the tool returned under redis v5.
+    RESP: 2,
     socket: {
       connectTimeout: 5000,
       reconnectStrategy: (retries) => Math.min(retries * 200, 5000),

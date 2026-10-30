@@ -3,12 +3,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const queryMock = vi.fn();
 const endMock = vi.fn();
 const onMock = vi.fn<(event: string, handler: (err: Error) => void) => void>();
+const poolOptions = vi.hoisted(() => [] as Array<{ connectionString: string; ssl: unknown }>);
 
 vi.mock("pg", () => ({
   Pool: class {
     query = queryMock;
     end = endMock;
     on = onMock;
+    constructor(options: { connectionString: string; ssl: unknown }) {
+      poolOptions.push(options);
+    }
   },
 }));
 
@@ -117,5 +121,60 @@ describe("createPostgresAdapter", () => {
     expect(() => handler(new Error("idle drop"))).not.toThrow();
     expect(writeSpy).toHaveBeenCalledWith(expect.stringContaining("[postgres:postgres] idle drop"));
     writeSpy.mockRestore();
+  });
+
+  it("stringifies non-Error rejections", async () => {
+    queryMock.mockRejectedValue("connection reset");
+    const { adapter, handler } = captureTool();
+    await expect(handler({ sql: "SELECT 1" })).resolves.toMatchObject({
+      content: [{ type: "text", text: "Query failed: connection reset" }],
+    });
+    await expect(adapter.healthCheck()).resolves.toMatchObject({ error: "connection reset" });
+  });
+
+  it("falls back to the row count when pg reports no rowCount", async () => {
+    queryMock.mockResolvedValue({ rows: [{ id: 1 }, { id: 2 }], rowCount: null });
+    const recordToolCall = vi.fn();
+    const adapter = createPostgresAdapter("postgres", {
+      type: "postgres",
+      enabled: true,
+      path: "postgres",
+      host: "localhost",
+      port: 5432,
+      database: "app",
+      userEnv: "POSTGRES_USER",
+      passwordEnv: "POSTGRES_PASSWORD",
+    });
+    let handler: ((args: { sql: string }) => Promise<unknown>) | undefined;
+    adapter.registerTools(
+      {
+        tool(_name: string, _description: string, _schema: unknown, fn: typeof handler) {
+          handler = fn;
+        },
+      } as never,
+      { adapterName: "postgres", logger: {} as never, queryLogLevel: "redacted", recordToolCall },
+    );
+    await handler!({ sql: "SELECT id FROM t" });
+    expect(recordToolCall).toHaveBeenCalledWith(expect.objectContaining({ resultCount: 2 }));
+  });
+
+  it("enables ssl and tolerates missing credential env vars", () => {
+    delete process.env.POSTGRES_USER;
+    delete process.env.POSTGRES_PASSWORD;
+    createPostgresAdapter("postgres", {
+      type: "postgres",
+      enabled: true,
+      path: "postgres",
+      host: "db.internal",
+      port: 5432,
+      database: "app",
+      userEnv: "POSTGRES_USER",
+      passwordEnv: "POSTGRES_PASSWORD",
+      ssl: true,
+    });
+    expect(poolOptions.at(-1)).toMatchObject({
+      connectionString: "postgresql://db.internal:5432/app",
+      ssl: { rejectUnauthorized: false },
+    });
   });
 });
