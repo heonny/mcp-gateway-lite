@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Security
+
+- Refreshed dependencies within their declared ranges to clear 68 production advisories reported by `pnpm audit --prod`, mostly in `hono`, `@hono/node-server` and the `express` tree pulled in by `@modelcontextprotocol/sdk`, plus `fast-uri` under `fastify`. `hono` is now 4.13.18 and `@hono/node-server` 2.1.8, a major version the SDK declares support for.
+
 ## [0.1.1] - 2026-04-06
 
 ### Added
