@@ -14,6 +14,10 @@ RUN pnpm prune --prod
 FROM node:26-alpine
 WORKDIR /app
 
+# The runtime only runs node, and the healthcheck uses node's fetch. The bundled npm
+# carried every HIGH trivy finding in this image (2026-11-20), so it is removed.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 COPY --from=build /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
